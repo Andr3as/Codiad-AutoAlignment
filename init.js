@@ -38,13 +38,24 @@
                 var _this           = this;
                 var _commandManager = codiad.editor.getActive().commands;
                 _commandManager.addCommand({
-                    name: 'autoAlignment',
+                    name: 'alignSign',
                     bindKey: {
                         "win": "Ctrl-Alt-A",
                         "mac": "Command-Alt-A"
                     },
                     exec: function() {
                         _this.runAlignment();
+                    }
+                });
+                
+                _commandManager.addCommand({
+                    name: 'alignLine',
+                    bindKey: {
+                        "win": "Ctrl-Alt-Shift-A",
+                        "mac": "Ctrl-Alt-Shift-A"
+                    },
+                    exec: function() {
+                        _this.alignLines();
                     }
                 });
             }
@@ -61,7 +72,7 @@
         
         //////////////////////////////////////////////////////////
         //
-        //  Run alignment to correct the style
+        //  Run alignment to correct the style of the signs
         //
         //////////////////////////////////////////////////////////
         runAlignment: function() {
@@ -145,6 +156,11 @@
         //
         //  str - {String} - Untrimmed string
         //
+        //  Result
+        //
+        //  obj - {Object} - string -> string without space, 
+        //                              trimed -> space
+        //
         //////////////////////////////////////////////////////////
         trimStartSpace: function(str) {
             trimedSpace = "";
@@ -157,9 +173,10 @@
                     str = this.minusFirstChar(str);
                 }
             }
-            var obj = {string : str, trimed : trimedSpace};
+            var obj = {"string" : str, "trimed" : trimedSpace};
             return obj;
         },
+        
         //////////////////////////////////////////////////////////
         //
         //  Delete the first char of the string
@@ -185,6 +202,10 @@
         //
         //  strArray - {Array} - Array to search in
         //  char - {String} - Character to search for
+        //
+        //  Result
+        //
+        //  {Integer} - Highest position
         //
         //////////////////////////////////////////////////////////
         findLastPos: function(strArray, char) {
@@ -242,6 +263,10 @@
         //  pos - {Integer} - Position to insert string
         //  value - {String} - String to insert
         //
+        //  Result
+        //
+        //  {String} - String with inserted sign
+        //
         //////////////////////////////////////////////////////////
         insertSign: function(str, pos, value) {
             var firstStr    = str.substring(0,pos);
@@ -258,6 +283,10 @@
         //  str - {String} - String to edit
         //  ending - {String} - Ending to replace with
         //
+        //  Result
+        //
+        //  {String} - Normalized String
+        //
         //////////////////////////////////////////////////////////
         normalizeLineEnding: function(str, ending) {
             return str.replace(new RegExp("\n", "g"), ending);
@@ -270,6 +299,10 @@
         //  Parameters
         //
         //  str - {String} - String to search in
+        //
+        //  Result
+        //
+        //  {String} - typical line ending
         //
         //////////////////////////////////////////////////////////
         getLineEnding: function(str) {
@@ -284,6 +317,94 @@
                 //Unix
                 return "\n";
             }
+        },
+        
+        //////////////////////////////////////////////////////////
+        //
+        //  Align all lines to the same column
+        //
+        //////////////////////////////////////////////////////////
+        alignLines: function() {
+            this.getSettings();
+            var trimedArray = [];
+            var _editor     = codiad.editor.getActive();
+            var selText     = codiad.editor.getSelectedText();
+            if (selText === "") {
+                codiad.message.error("Nothing selected!");
+                return false;
+            }
+            // multi selection
+            // ?Todo - rewrite - allow multiselection
+            if (codiad.editor.getActive().inMultiSelectMode) {
+                codiad.message.error("Multiselection is not supported!");
+                return false;
+            }
+            //Get line ending
+            var type = this.getLineEnding(selText);
+            //Split selected text
+            var selArray= selText.split(type);
+            //Generate space
+            var space    = "";
+            for (var i = 0; i < this.tabWidth; i++) {
+				space	+= " ";
+			}
+            //Trim whitespace at the start of each line
+            for (var j = 0; j < selArray.length; j++) {
+                var obj = this.trimStartSpace(selArray[j]);
+                obj.string    = obj.string.replace(new RegExp("\t", "g"), space);
+                selArray[j] = obj.string;
+                if (trimedArray == []) {
+                    trimedArray[0] = obj.trimed;
+                } else {
+                    trimedArray.push(obj.trimed);
+                }
+            }
+            //Get the longest trimed whitespace
+            var longest = 0;
+            var buffer  = 0;
+            var bufStr  = "";
+            for (var k = 0; k < trimedArray.length; k++) {
+                buffer  = this.getLength(trimedArray[k]);
+                if (buffer > longest) {
+                    longest = buffer;
+                    bufStr  = trimedArray[k];
+                }
+            }
+            //Insert Text
+            insText = "";
+            for (var t = 0; t < (selArray.length-1);t++) {
+                insText += bufStr + selArray[t] + "\n";
+            }
+            insText += bufStr + selArray[selArray.length-1];
+            //Normalize line endings
+            insText = this.normalizeLineEnding(insText, type);
+            codiad.editor.insertText(insText);
+            return true;
+        },
+        
+        //////////////////////////////////////////////////////////
+        //
+        //  Get the length of the string
+        //
+        //  Parameters
+        //
+        //  str - {String} - String
+        //
+        //  Result
+        //
+        //  {Integer} - Length of the string
+        //
+        //////////////////////////////////////////////////////////
+        getLength: function(str) {
+            var len = 0;
+            for (var i = 0; i < str.length; i++) {
+                if (str[i] == "\t") {
+                    len += this.tabWidth;
+                } else {
+                    len++;
+                }
+            }
+            return len;
         }
     };
 })(this, jQuery);
