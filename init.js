@@ -328,6 +328,12 @@
             this.getSettings();
             var trimedArray = [];
             var _editor     = codiad.editor.getActive();
+            //Expand selection to start of the line
+            var sel = codiad.editor.getActive().selection.getRange();
+            codiad.editor.getActive().clearSelection();
+            codiad.editor.getActive().moveCursorToPosition({"row": sel.start.row,"column": 0});
+            codiad.editor.getActive().selection.selectToPosition(sel.end);
+            //Get selected text
             var selText     = codiad.editor.getSelectedText();
             if (selText === "") {
                 codiad.message.error("Nothing selected!");
