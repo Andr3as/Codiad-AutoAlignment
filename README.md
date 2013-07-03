@@ -30,22 +30,22 @@ This is a plugin for the cloud IDE Codiad. It adds an ability to improve the cod
 
 ####Before
 
-![Before](http://www.andr3as.bplaced.net/AutoAlignment/img/example1.jpg "Before")
+![Before](http://andrano.de/AutoAlignment/img/example1.jpg "Before")
 
 ####After
 
-![After](http://www.andr3as.bplaced.net/AutoAlignment/img/example2.jpg "After")
+![After](http://andrano.de/AutoAlignment/img/example2.jpg "After")
 
 ###Align Lines
 
 ####Before
 
-![Before](http://www.andr3as.bplaced.net/AutoAlignment/img/example3.jpg "Before")
+![Before](http://andrano.de/AutoAlignment/img/example3.jpg "Before")
 
 ####After
 
-![After](http://www.andr3as.bplaced.net/AutoAlignment/img/example4.jpg "After")
+![After](http://andrano.de/AutoAlignment/img/example4.jpg "After")
 
 ###More Information
 
-[http://www.andr3as.bplaced.net/AutoAlignment](http://www.andr3as.bplaced.net/AutoAlignment "More Information")
+[http://andrano.de/AutoAlignment](http://andrano.de/AutoAlignment "More Information")
