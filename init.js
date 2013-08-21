@@ -37,6 +37,8 @@
             if (codiad.editor.getActive() !== null) {
                 var _this           = this;
                 var _commandManager = codiad.editor.getActive().commands;
+                //clear Interval
+                window.clearInterval(_this.bindKeys);
                 _commandManager.addCommand({
                     name: 'alignSign',
                     bindKey: {
