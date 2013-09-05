@@ -18,14 +18,15 @@
     codiad.AutoAlignment = {
         
         path    : curpath,
-        bindKeys: null,
         tabWidth: 4,
         
         wordPre : ["+","-","*","/","%",":","!"],
         
         init: function() {
             var _this       = this;
-            this.bindKeys   = window.setInterval(function(){_this.addKeyBindings()},1000);
+            amplify.subscribe('active.onOpen', function(path){
+                _this.addKeyBindings();
+            });
         },
         
         //////////////////////////////////////////////////////////
