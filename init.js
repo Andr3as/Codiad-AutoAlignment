@@ -55,7 +55,7 @@
                     name: 'alignLine',
                     bindKey: {
                         "win": "Ctrl-Alt-Shift-A",
-                        "mac": "Ctrl-Alt-Shift-A"
+                        "mac": "Command-Alt-Shift-A"
                     },
                     exec: function() {
                         _this.alignLines();
