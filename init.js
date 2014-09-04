@@ -72,7 +72,7 @@
         //
         //////////////////////////////////////////////////////////
         getSettings: function() {
-			this.tabWidth	= codiad.editor.getActive().getSession().getTabSize();
+            this.tabWidth    = codiad.editor.getActive().getSession().getTabSize();
         },
         
         //////////////////////////////////////////////////////////
@@ -143,14 +143,14 @@
             //Split selected text
             var selArray= content.split(type);
             //Generate space
-            var space	= "";
+            var space    = "";
             for (var i = 0; i < this.tabWidth; i++) {
-				space  += " ";
-			}
+                space  += " ";
+            }
             //Trim whitespace at the start of each line
             for (var j = 0; j < selArray.length; j++) {
                 var obj = this.trimStartSpace(selArray[j]);
-                obj.string	= obj.string.replace(new RegExp("\t", "g"), space);
+                obj.string    = obj.string.replace(new RegExp("\t", "g"), space);
                 selArray[j] = obj.string;
                 trimedArray.push(obj.trimed);
             }
@@ -396,8 +396,8 @@
             //Generate space
             var space    = "";
             for (var i = 0; i < this.tabWidth; i++) {
-				space	+= " ";
-			}
+                space    += " ";
+            }
             //Trim whitespace at the start of each line
             for (var j = 0; j < selArray.length; j++) {
                 var obj = this.trimStartSpace(selArray[j]);
