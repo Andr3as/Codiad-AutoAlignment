@@ -1,7 +1,10 @@
 /*
  * Copyright (c) Codiad & Andr3as, distributed
  * as-is and without warranty under the MIT License. 
- * See [root]/license.md for more information. This information must remain intact.
+ * See http://opensource.org/licenses/MIT for more information. 
+ * This information must remain intact.
+ * @author Andr3as
+ * @version 1.1
  */
 
 (function(global, $){
@@ -20,7 +23,7 @@
         path    : curpath,
         tabWidth: 4,
         
-        wordPre : ["+","-","*","/","%",":","!"],
+        wordPre : ["+","-","*","/","%",":","!","."],
         
         init: function() {
             var _this       = this;
@@ -36,11 +39,10 @@
         //////////////////////////////////////////////////////////
         addKeyBindings: function() {
             if (codiad.editor.getActive() !== null) {
-                var _this           = this;
-                var _commandManager = codiad.editor.getActive().commands;
-                //clear Interval
-                window.clearInterval(_this.bindKeys);
-                _commandManager.addCommand({
+                var _this   = this;
+                var manager = codiad.editor.getActive().commands;
+                
+                manager.addCommand({
                     name: 'alignSign',
                     bindKey: {
                         "win": "Ctrl-Alt-A",
@@ -51,7 +53,7 @@
                     }
                 });
                 
-                _commandManager.addCommand({
+                manager.addCommand({
                     name: 'alignLine',
                     bindKey: {
                         "win": "Ctrl-Alt-Shift-A",
@@ -79,39 +81,78 @@
         //
         //////////////////////////////////////////////////////////
         runAlignment: function() {
+            var _this = this;
             this.getSettings();
             var trimedArray = [];
-            var _editor     = codiad.editor.getActive();
+            var editor      = codiad.editor.getActive();
+            var session     = editor.getSession();
             var selText     = codiad.editor.getSelectedText();
             if (selText === "") {
                 codiad.message.error("Nothing selected!");
                 return false;
             }
             // multi selection
-            // ?Todo - rewrite - allow multiselection
-            if (codiad.editor.getActive().inMultiSelectMode) {
-                codiad.message.error("Multiselection is not supported!");
-                return false;
+            var fn = function(range) {
+                if ((range.start.row == range.end.row) && (range.start.column == range.end.column)) {
+                    return false;
+                }
+                //Get selection
+                var selection = session.getTextRange(range);
+                if (selection === "") {
+                    /* No selection at the given position. */
+                    return false;
+                }
+                selection = _this.runSelection(selection);
+                if (selection === false) {
+                    return false;
+                }
+                session.replace(range, selection);
+                return true;
+            };
+            
+            if (editor.inMultiSelectMode) {
+                //Multiselection
+                var multiRanges = editor.multiSelect.getAllRanges();
+                for (var i = 0; i < multiRanges.length; i++) {
+                    fn(multiRanges[i]);
+                }
+            } else {
+                //Singleselection
+                fn(editor.getSelectionRange());
             }
+            return true;
+        },
+        
+        //////////////////////////////////////////////////////////
+        //
+        //  Align content
+        //
+        //  Parameters
+        //
+        //  str - {String} - Content to align
+        //
+        //  Result
+        //
+        //  {String} - Aligned content
+        //
+        //////////////////////////////////////////////////////////
+        runSelection: function(content) {
+            var trimedArray = [];
             //Get line ending
-            var type = this.getLineEnding(selText);
+            var type    = this.getLineEnding(content);
             //Split selected text
-            var selArray= selText.split(type);
+            var selArray= content.split(type);
             //Generate space
             var space	= "";
             for (var i = 0; i < this.tabWidth; i++) {
-				space	+= " ";
+				space  += " ";
 			}
             //Trim whitespace at the start of each line
             for (var j = 0; j < selArray.length; j++) {
                 var obj = this.trimStartSpace(selArray[j]);
                 obj.string	= obj.string.replace(new RegExp("\t", "g"), space);
                 selArray[j] = obj.string;
-                if (trimedArray == []) {
-                    trimedArray[0] = obj.trimed;
-                } else {
-                    trimedArray.push(obj.trimed);
-                }
+                trimedArray.push(obj.trimed);
             }
             
             //Check whether to handle an equal sign or a colon
@@ -147,8 +188,8 @@
             insText += trimedArray[selArray.length-1] + selArray[selArray.length-1];
             //Normalize line endings
             insText = this.normalizeLineEnding(insText, type);
-            codiad.editor.insertText(insText);
-            return true;
+            //Return result
+            return insText;
         },
         
         //////////////////////////////////////////////////////////
