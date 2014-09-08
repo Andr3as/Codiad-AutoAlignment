@@ -49,7 +49,7 @@
                         "mac": "Command-Alt-A"
                     },
                     exec: function() {
-                        _this.runAlignment();
+                        _this.alignSign();
                     }
                 });
                 
@@ -80,7 +80,7 @@
         //  Run alignment to correct the style of the signs
         //
         //////////////////////////////////////////////////////////
-        runAlignment: function() {
+        alignSign: function() {
             var _this = this;
             this.getSettings();
             var trimedArray = [];
@@ -102,7 +102,7 @@
                     /* No selection at the given position. */
                     return false;
                 }
-                selection = _this.runSelection(selection);
+                selection = _this.alignSignInSelection(selection);
                 if (selection === false) {
                     return false;
                 }
@@ -129,14 +129,14 @@
         //
         //  Parameters
         //
-        //  str - {String} - Content to align
+        //  content - {String} - Content to align
         //
         //  Result
         //
         //  {String} - Aligned content
         //
         //////////////////////////////////////////////////////////
-        runSelection: function(content) {
+        alignSignInSelection: function(content) {
             var trimedArray = [];
             //Get line ending
             var type    = this.getLineEnding(content);
@@ -282,17 +282,19 @@
             var preSign = "";
             //Line contains no sign
             if (bufferStr.indexOf(sign) != -1) {
-                while (bufferStr.indexOf(sign) != lastPos) {
-                    bufferPos   = bufferStr.indexOf(sign);
-                    preSign     = bufferStr.charAt(bufferPos-1);
-                    if (this.wordPre.indexOf(preSign) != -1) {
-                        //Special char before sign, insert space before special char
-                        bufferStr   = this.insertSign(bufferStr, bufferPos-1, " ");
-                    } else {
-                        //No special char before sign, insert space before sign
-                        bufferStr   = this.insertSign(bufferStr, bufferPos, " ");
-                    }
+                bufferPos   = bufferStr.indexOf(sign);
+                preSign     = bufferStr.charAt(bufferPos - 1);
+                var length  = lastPos - bufferPos;
+                var indent  = "";
+                for (var i = 0; i < length; i++) {
+                    indent += " ";
                 }
+                if (this.wordPre.indexOf(preSign) != -1) {
+                    bufferPos = bufferPos - 1;
+                } else if (sign == ":") {
+                    bufferPos = bufferPos + 1;
+                }
+                bufferStr = this.insertSign(bufferStr, bufferPos, indent);
             }
             return bufferStr;
         },
