@@ -12,7 +12,8 @@
     var codiad  = global.codiad,
         scripts = document.getElementsByTagName('script'),
         path    = scripts[scripts.length-1].src.split('?')[0],
-        curpath = path.split('/').slice(0, -1).join('/')+'/';
+        curpath = path.split('/').slice(0, -1).join('/')+'/',
+        Range   = ace.require('ace/range').Range;
 
     $(function() {    
         codiad.AutoAlignment.init();
@@ -91,34 +92,16 @@
                 codiad.message.error("Nothing selected!");
                 return false;
             }
-            // multi selection
-            var fn = function(range) {
-                if ((range.start.row == range.end.row) && (range.start.column == range.end.column)) {
-                    return false;
-                }
-                //Get selection
-                var selection = session.getTextRange(range);
-                if (selection === "") {
-                    /* No selection at the given position. */
-                    return false;
-                }
-                selection = _this.alignSignInSelection(selection);
-                if (selection === false) {
-                    return false;
-                }
-                session.replace(range, selection);
-                return true;
-            };
-            
+
             if (editor.inMultiSelectMode) {
                 //Multiselection
                 var multiRanges = editor.multiSelect.getAllRanges();
                 for (var i = 0; i < multiRanges.length; i++) {
-                    fn(multiRanges[i]);
+                    this.runCommandForRange(multiRanges[i], this.alignSignInSelection.bind(this));
                 }
             } else {
                 //Singleselection
-                fn(editor.getSelectionRange());
+                this.runCommandForRange(editor.getSelectionRange(), this.alignSignInSelection.bind(this));
             }
             return true;
         },
@@ -372,29 +355,52 @@
         //////////////////////////////////////////////////////////
         alignLines: function() {
             this.getSettings();
+            var editor     = codiad.editor.getActive();
+            //Expand selections to start of the line
+            if (editor.inMultiSelectMode) {
+                var ranges = editor.selection.ranges;
+                var buffer = [];
+                for (var i = 0; i < ranges.length; i++) {
+                    buffer[i] = new Range(ranges[i].start.row, 0, ranges[i].end.row, ranges[i].end.column);
+                }
+                
+                editor.exitMultiSelectMode();
+                editor.clearSelection();
+                
+                for (var j = 0; j < buffer.length; j++) {
+                    editor.selection.addRange(buffer[j]);
+                    this.runCommandForRange(buffer[j], this.alignLinesInSelection.bind(this));
+                }
+            } else {
+                var range   = codiad.editor.getActive().selection.getRange();
+                range       = new Range(range.start.row, 0, range.end.row, range.end.column);
+                codiad.editor.getActive().selection.setRange(range);
+                this.runCommandForRange(editor.getSelectionRange(), this.alignLinesInSelection.bind(this));
+            }
+        },
+        
+        //////////////////////////////////////////////////////////
+        //
+        //  Align Lines content
+        //
+        //  Parameters
+        //
+        //  lines - {String} - Lines to align
+        //
+        //  Result
+        //
+        //  {String} - Aligned content
+        //
+        //////////////////////////////////////////////////////////
+        alignLinesInSelection: function(content) {
+            if (content === "") {
+                return false;
+            }
             var trimedArray = [];
-            var _editor     = codiad.editor.getActive();
-            //Expand selection to start of the line
-            var sel = codiad.editor.getActive().selection.getRange();
-            codiad.editor.getActive().clearSelection();
-            codiad.editor.getActive().moveCursorToPosition({"row": sel.start.row,"column": 0});
-            codiad.editor.getActive().selection.selectToPosition(sel.end);
-            //Get selected text
-            var selText     = codiad.editor.getSelectedText();
-            if (selText === "") {
-                codiad.message.error("Nothing selected!");
-                return false;
-            }
-            // multi selection
-            // ?Todo - rewrite - allow multiselection
-            if (codiad.editor.getActive().inMultiSelectMode) {
-                codiad.message.error("Multiselection is not supported!");
-                return false;
-            }
             //Get line ending
-            var type = this.getLineEnding(selText);
+            var type = this.getLineEnding(content);
             //Split selected text
-            var selArray= selText.split(type);
+            var selArray= content.split(type);
             //Generate space
             var space    = "";
             for (var i = 0; i < this.tabWidth; i++) {
@@ -429,9 +435,7 @@
             }
             insText += bufStr + selArray[selArray.length-1];
             //Normalize line endings
-            insText = this.normalizeLineEnding(insText, type);
-            codiad.editor.insertText(insText);
-            return true;
+            return this.normalizeLineEnding(insText, type);
         },
         
         //////////////////////////////////////////////////////////
@@ -457,6 +461,25 @@
                 }
             }
             return len;
+        },
+        
+        runCommandForRange: function(range, handler) {
+            var session = codiad.editor.getActive().getSession();
+            if ((range.start.row == range.end.row) && (range.start.column == range.end.column)) {
+                return false;
+            }
+            //Get selection
+            var selection = session.getTextRange(range);
+            if (selection === "") {
+                /* No selection at the given position. */
+                return false;
+            }
+            selection = handler(selection);
+            if (selection === false) {
+                return false;
+            }
+            session.replace(range, selection);
+            return true;
         }
     };
 })(this, jQuery);

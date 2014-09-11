@@ -2,6 +2,9 @@
 
 This is a plugin for the cloud IDE Codiad. It adds an ability to improve the code style for a better readability.
 
+#Channellog
+- 1.0.0: Supports now finally multi selection
+
 #Installation
 
 - Download the zip file and unzip it to your plugin folder.
