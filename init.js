@@ -4,7 +4,7 @@
  * See http://opensource.org/licenses/MIT for more information. 
  * This information must remain intact.
  * @author Andr3as
- * @version 1.1
+ * @version 1.1.0
  */
 
 (function(global, $){
@@ -21,8 +21,9 @@
 
     codiad.AutoAlignment = {
         
-        path    : curpath,
-        tabWidth: 4,
+        path        : curpath,
+        tabWidth    : 4,
+        secondMode  : false,
         
         wordPre : ["+","-","*","/","%",":","!","."],
         
@@ -50,6 +51,7 @@
                         "mac": "Command-Alt-A"
                     },
                     exec: function() {
+                        _this.secondMode = false;
                         _this.alignSign();
                     }
                 });
@@ -62,6 +64,18 @@
                     },
                     exec: function() {
                         _this.alignLines();
+                    }
+                });
+                
+                manager.addCommand({
+                    name: 'alignKeys',
+                    bindKey: {
+                        "win": "Alt-A",
+                        "mac": "Alt-A"
+                    },
+                    exec: function() {
+                        _this.secondMode = true;
+                        _this.alignSign();
                     }
                 });
             }
@@ -275,7 +289,13 @@
                 if (this.wordPre.indexOf(preSign) != -1) {
                     bufferPos = bufferPos - 1;
                 } else if (sign == ":") {
-                    bufferPos = bufferPos + 1;
+                    if (this.secondMode) {
+                        //Align sign
+                        bufferPos = bufferStr.search(/^[\s]/);
+                    } else {
+                        //Align value
+                        bufferPos = bufferPos;
+                    }
                 }
                 bufferStr = this.insertSign(bufferStr, bufferPos, indent);
             }
